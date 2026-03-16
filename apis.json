@@ -1,0 +1,7 @@
+{
+  "apis": [
+    "https://api.github.com",
+    "https://jsonplaceholder.typicode.com/posts",
+    "https://api.coindesk.com/v1/bpi/currentprice.json"
+  ]
+}

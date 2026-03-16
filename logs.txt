@@ -1,0 +1,3 @@
+[2026-03-16T14:56:00.424Z] SUCCESS https://api.github.com Status:200 Time:396ms
+[2026-03-16T14:56:00.526Z] SUCCESS https://jsonplaceholder.typicode.com/posts Status:200 Time:101ms
+[2026-03-16T14:56:00.552Z] ERROR https://api.coindesk.com/v1/bpi/currentprice.json Message:getaddrinfo ENOTFOUND api.coindesk.com Time:25ms
