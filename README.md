@@ -1,89 +1,207 @@
-API Health Monitoring Tool
-Overview
+# Distributed API Monitoring & Alerting System
 
-The API Health Monitoring Tool is a lightweight Node.js utility that monitors the availability and performance of multiple REST APIs.
-It performs automated health checks, tracks response times, detects failures, and logs operational data for troubleshooting and reliability monitoring.
+A scalable system for continuously monitoring APIs, analyzing performance, and triggering alerts based on defined conditions.
 
-This tool simulates a basic production monitoring system used in application support and DevOps environments.
+---
 
-Features
+## Overview
 
-Automated API health checks
+This project extends a basic API health checker into a distributed system capable of:
 
-Response time monitoring
+* Running periodic health checks
+* Measuring latency, uptime, and error rates
+* Detecting failures using thresholds
+* Triggering alerts via multiple channels
+* Visualizing system health through a dashboard
 
-HTTP status code validation
+---
 
-Failure detection and alerting
+## Architecture
 
-Periodic monitoring using scheduled jobs
+```
+Scheduler → Queue → Workers → Metrics Engine → State Engine → Alerting → Dashboard
+```
 
-Logging of API status and performance metrics
+### Components
 
-Configurable API endpoints via JSON
+* API Service – REST endpoints for managing APIs, metrics, and alerts
+* Scheduler – Creates periodic jobs using a queue
+* Worker Service – Executes API checks concurrently
+* Alerting Service – Evaluates failures and triggers alerts
+* Dashboard – Displays system health and analytics
+* Database – Stores APIs, logs, and metrics
 
-Tech Stack
+---
 
-Node.js
+## Tech Stack
 
-Axios – HTTP client for API requests
+### Backend
 
-node-cron – task scheduling
+* Node.js
+* Fastify
+* PostgreSQL (or TimescaleDB)
+* Redis + BullMQ
 
-JSON configuration for API management
+### Frontend
 
-Project Structure
-api-health-monitoring-tool
+* Next.js
+* Chart.js or Recharts
+
+### Infrastructure
+
+* Docker
+* Docker Compose
+* Kubernetes (optional)
+
+---
+
+## Project Structure
+
+```
+distributed-api-monitor/
+├── apps/
+│   ├── api/
+│   ├── scheduler/
+│   ├── worker/
+│   ├── alerting/
+│   └── dashboard/
 │
-├── monitor.js        # Main monitoring script
-├── apis.json         # List of APIs to monitor
-├── logs.txt          # Generated log file
-├── package.json
-├── .gitignore
-└── README.md
-Installation
+├── packages/
+│   ├── db/
+│   ├── queue/
+│   └── types/
+│
+├── infra/
+│   ├── docker-compose.yml
+│   └── k8s/
+```
 
-Clone the repository:
+---
 
-git clone https://github.com/AnoushkaNavale/Api-Health-Monitoring-Tool.git
+## How It Works
 
-Navigate to the project directory:
+1. APIs are registered through the API service
+2. Scheduler creates periodic jobs
+3. Jobs are pushed to a Redis queue
+4. Workers process jobs in parallel:
 
-cd Api-Health-Monitoring-Tool
+   * Send HTTP request
+   * Measure response time
+   * Store result
+5. Metrics engine computes:
 
-Install dependencies:
+   * Uptime percentage
+   * Latency trends
+   * Error rates
+6. State engine determines:
 
-npm install
-Configuration
+   * UP
+   * DEGRADED
+   * DOWN
+7. Alerting service triggers notifications
+8. Dashboard displays system data
 
-Edit apis.json to add or modify the APIs you want to monitor.
+---
 
-Example:
+## Features
 
-{
-  "apis": [
-    "https://api.github.com",
-    "https://jsonplaceholder.typicode.com/posts",
-    "https://dog.ceo/api/breeds/image/random"
-  ]
-}
-Running the Tool
+### Core
 
-Start the monitoring script:
+* Periodic API monitoring
+* Parallel execution using worker queues
+* Retry with exponential backoff
+* Threshold-based failure detection
+* State transitions (UP / DEGRADED / DOWN)
 
-node monitor.js
+### Metrics
 
-The tool will automatically check API health at scheduled intervals.
+* Uptime percentage
+* Average and p95 latency
+* Error rate tracking
+* Historical logs
 
-Example Output
+### Alerting
 
-Running API Health Check...
+* Email alerts
+* Webhook alerts (Slack, Discord)
+* Alert cooldown
 
-[2026-03-16T14:57:00.402Z] SUCCESS https://api.github.com Status:200 Time:377ms
+### Dashboard
 
-[2026-03-16T14:57:00.481Z] SUCCESS https://jsonplaceholder.typicode.com/posts Status:200 Time:78ms
+* Real-time API status
+* Latency graphs
+* Failure timeline
 
-[2026-03-16T14:57:00.490Z] ERROR https://api.coindesk.com/v1/bpi/currentprice.json Message:getaddrinfo ENOTFOUND api.coindesk.com Time:8ms
+---
 
-ALERT: API FAILURE DETECTED
-Monitoring cycle completed
+## Authentication (Optional)
+
+* JWT-based authentication
+* Multi-user API management
+
+---
+
+## Running Locally
+
+### Clone the repository
+
+```
+git clone <your-repo-url>
+cd distributed-api-monitor
+```
+
+### Start services
+
+```
+docker-compose up --build
+```
+
+### Access
+
+* API: http://localhost:3000
+* Dashboard: http://localhost:3001
+
+---
+
+## Scaling
+
+* Worker services can be scaled horizontally
+* Queue-based architecture distributes load
+* Kubernetes configuration supports auto-scaling
+
+---
+
+## Use Case
+
+Monitor critical APIs such as authentication services, payment systems, and third-party integrations to detect issues before they impact users.
+
+---
+
+## Future Improvements
+
+* Region-based monitoring
+* Anomaly detection for latency
+* Public status page
+* CI/CD integration
+
+---
+
+## What This Project Demonstrates
+
+* Distributed system design
+* Asynchronous processing
+* Fault tolerance
+* Observability and monitoring
+* Backend scalability
+
+---
+
+## License
+
+MIT License
+
+---
+
+## Author
+
+Anoushka Navale
