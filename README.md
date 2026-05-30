@@ -1,92 +1,149 @@
-# Distributed API Monitoring & Alerting System
+# Distributed API Monitoring System
 
-A production-grade distributed system for monitoring REST API health at scale.
+A Dockerized backend service for registering APIs, scheduling periodic health checks, storing metrics, and exposing REST endpoints for status, metrics, alerts, and public status pages.
 
-## Architecture
+This project is a backend API only. It does not include a web dashboard or frontend UI.
 
-- **Scheduler** — BullMQ repeatable jobs, per-API configurable intervals, pg_notify reactive sync
-- **Worker Pool** — Async parallel HTTP checks, 50 concurrent per pod, exponential backoff retry
-- **State Engine** — UP / DEGRADED / DOWN transitions with threshold-based failure detection
-- **TimescaleDB** — Hypertable time-series storage, continuous aggregates for fast metrics
-- **Alerting** — Email + Slack/Discord webhooks with Redis-backed cooldown
-- **REST API** — Fastify + JWT auth + rate limiting + public status pages
+## Services
+
+- **API**: Fastify REST API with JWT auth and rate limiting
+- **Scheduler**: BullMQ-based scheduler that keeps API check jobs in sync with the database
+- **PostgreSQL / TimescaleDB**: Stores users, monitored APIs, health checks, metrics, alerts, and status pages
+- **Redis**: Queue backend for BullMQ
 
 ## Tech Stack
 
-| Layer      | Technology                        |
-|------------|-----------------------------------|
-| Runtime    | Node.js 20 + TypeScript           |
-| Queue      | BullMQ + Redis 7                  |
-| Database   | PostgreSQL 16 + TimescaleDB       |
-| API        | Fastify 4                         |
-| Auth       | JWT (HS256) + bcrypt              |
-| Infra      | Docker Compose → Kubernetes       |
-| CI/CD      | GitHub Actions                    |
+| Layer | Technology |
+| --- | --- |
+| Runtime | Node.js 20 + TypeScript |
+| API | Fastify 4 |
+| Auth | JWT + bcrypt |
+| Queue | BullMQ + Redis 7 |
+| Database | PostgreSQL 16 + TimescaleDB |
+| Infra | Docker Compose |
 
 ## Quick Start
 
-```bash
-# 1. Copy env file
-cp .env.example .env
+From the project root:
 
-# 2. Start all services
-docker compose up -d
-
-# 3. API is live at http://localhost:3000
-# 4. Register a user
-curl -X POST http://localhost:3000/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{"email":"you@example.com","password":"password123"}'
-
-# 5. Add an API to monitor
-curl -X POST http://localhost:3000/apis \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{"name":"My API","url":"https://api.example.com/health","interval_sec":60}'
+```powershell
+Copy-Item .env.example .env
+docker compose up -d --build
 ```
+
+Check that the API is running:
+
+```powershell
+Invoke-RestMethod http://localhost:3000/health
+```
+
+Expected response:
+
+```json
+{
+  "status": "ok",
+  "ts": "2026-05-30T18:25:35.314Z"
+}
+```
+
+The API runs at:
+
+```text
+http://localhost:3000
+```
+
+## Useful Docker Commands
+
+```powershell
+docker compose ps
+docker compose logs -f api
+docker compose logs -f scheduler
+docker compose down
+```
+
+To remove containers and the database volume:
+
+```powershell
+docker compose down -v
+```
+
+## Basic API Usage
+
+Register a user:
+
+```powershell
+curl -X POST http://localhost:3000/auth/register `
+  -H "Content-Type: application/json" `
+  -d '{"email":"you@example.com","password":"password123"}'
+```
+
+Log in and copy the returned token:
+
+```powershell
+curl -X POST http://localhost:3000/auth/login `
+  -H "Content-Type: application/json" `
+  -d '{"email":"you@example.com","password":"password123"}'
+```
+
+Add an API to monitor:
+
+```powershell
+curl -X POST http://localhost:3000/apis `
+  -H "Authorization: Bearer <token>" `
+  -H "Content-Type: application/json" `
+  -d '{"name":"Example API","url":"https://example.com","interval_sec":60}'
+```
+
+Replace `<token>` with the JWT returned by the login endpoint.
 
 ## API Reference
 
 | Method | Path | Description |
-|--------|------|-------------|
+| --- | --- | --- |
+| GET | /health | Health check |
 | POST | /auth/register | Create account |
 | POST | /auth/login | Get JWT token |
 | GET | /auth/me | Current user |
 | GET | /apis | List monitored APIs |
+| GET | /apis/:id | Get one monitored API |
 | POST | /apis | Add API to monitor |
 | PATCH | /apis/:id | Update API config |
 | DELETE | /apis/:id | Remove API |
-| GET | /apis/:id/status | Current state + recent checks |
-| GET | /apis/:id/metrics | Uptime %, avg/p95 latency, error rate |
-| GET | /apis/:id/metrics/hourly | Hourly buckets for charting |
-| GET | /apis/:id/metrics/latency-percentiles | P50/P75/P90/P95/P99 |
+| GET | /apis/:id/status | Current state and latest check |
+| GET | /apis/:id/metrics | Uptime, latency, and error-rate metrics |
+| GET | /apis/:id/metrics/hourly | Hourly metric buckets |
+| GET | /apis/:id/metrics/latency-percentiles | P50/P75/P90/P95/P99 latency |
 | GET | /apis/:id/metrics/checks | Paginated check log |
-| GET | /metrics/summary | Dashboard overview |
+| GET | /apis/summary | Dashboard-style summary for the current user |
+| GET | /alerts/configs/:apiId | Get alert config for an API |
 | PUT | /alerts/configs/:apiId | Upsert alert config |
-| GET | /alerts/history | Alert history (paginated) |
+| DELETE | /alerts/configs/:apiId | Delete alert config |
+| GET | /alerts/history | Alert history |
+| GET | /alerts/history/:id | Alert detail |
+| GET | /alerts/status-pages | List status pages |
 | POST | /alerts/status-pages | Create public status page |
-| GET | /status/:slug | Public status page (no auth) |
+| DELETE | /alerts/status-pages/:id | Delete status page |
+| GET | /status/:slug | Public status page |
 
 ## Project Structure
 
-```
+```text
 distributed-api-monitor/
 ├── apps/
 │   ├── api/          # Fastify REST API
 │   └── scheduler/    # BullMQ job scheduler
 ├── packages/
-│   ├── db/           # PostgreSQL client + migrations
-│   ├── queue/        # BullMQ config + queue factory
+│   ├── db/           # PostgreSQL client and migrations
+│   ├── queue/        # BullMQ queue config
 │   └── types/        # Shared TypeScript interfaces
 ├── docker-compose.yml
+├── package.json
+├── tsconfig.base.json
 └── turbo.json
 ```
 
-## Scaling Workers
+## Notes
 
-```bash
-# Run 5 worker instances locally
-docker compose up --scale worker=5
-```
-
-For Kubernetes, the worker deployment has HPA configured to scale based on queue depth.
+- `.env` is ignored by Git. Commit `.env.example`, not `.env`.
+- Docker Compose starts the API, scheduler, PostgreSQL/TimescaleDB, and Redis.
+- There is currently no frontend dashboard and no separate worker service in this repository.
