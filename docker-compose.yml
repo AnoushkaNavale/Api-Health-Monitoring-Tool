@@ -45,6 +45,7 @@ services:
       JWT_SECRET: change-me-in-production
       NODE_ENV: production
       LOG_LEVEL: info
+      ALLOWED_ORIGINS: http://localhost:3001
 
   scheduler:
     build:
@@ -61,6 +62,15 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       NODE_ENV: production
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    depends_on:
+      - api
+    ports:
+      - "3001:80"
 
 volumes:
   pg_data:

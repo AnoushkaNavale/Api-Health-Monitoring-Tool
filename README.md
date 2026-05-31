@@ -1,12 +1,11 @@
 # Distributed API Monitoring System
 
-A Dockerized backend service for registering APIs, scheduling periodic health checks, storing metrics, and exposing REST endpoints for status, metrics, alerts, and public status pages.
-
-This project is a backend API only. It does not include a web dashboard or frontend UI.
+A Dockerized API monitoring application for registering APIs, scheduling periodic health checks, storing metrics, and reviewing status, alerts, and public status pages from a web dashboard.
 
 ## Services
 
 - **API**: Fastify REST API with JWT auth and rate limiting
+- **Web**: React dashboard for managing monitors, metrics, alerts, and status pages
 - **Scheduler**: BullMQ-based scheduler that keeps API check jobs in sync with the database
 - **PostgreSQL / TimescaleDB**: Stores users, monitored APIs, health checks, metrics, alerts, and status pages
 - **Redis**: Queue backend for BullMQ
@@ -17,6 +16,7 @@ This project is a backend API only. It does not include a web dashboard or front
 | --- | --- |
 | Runtime | Node.js 20 + TypeScript |
 | API | Fastify 4 |
+| Web | React + Vite |
 | Auth | JWT + bcrypt |
 | Queue | BullMQ + Redis 7 |
 | Database | PostgreSQL 16 + TimescaleDB |
@@ -52,11 +52,18 @@ The API runs at:
 http://localhost:3000
 ```
 
+The web dashboard runs at:
+
+```text
+http://localhost:3001
+```
+
 ## Useful Docker Commands
 
 ```powershell
 docker compose ps
 docker compose logs -f api
+docker compose logs -f web
 docker compose logs -f scheduler
 docker compose down
 ```
@@ -131,7 +138,8 @@ Replace `<token>` with the JWT returned by the login endpoint.
 distributed-api-monitor/
 ├── apps/
 │   ├── api/          # Fastify REST API
-│   └── scheduler/    # BullMQ job scheduler
+│   ├── scheduler/    # BullMQ job scheduler
+│   └── web/          # React dashboard
 ├── packages/
 │   ├── db/           # PostgreSQL client and migrations
 │   ├── queue/        # BullMQ queue config
@@ -145,5 +153,5 @@ distributed-api-monitor/
 ## Notes
 
 - `.env` is ignored by Git. Commit `.env.example`, not `.env`.
-- Docker Compose starts the API, scheduler, PostgreSQL/TimescaleDB, and Redis.
-- There is currently no frontend dashboard and no separate worker service in this repository.
+- Docker Compose starts the web dashboard, API, scheduler, PostgreSQL/TimescaleDB, and Redis.
+- There is currently no separate worker service in this repository.
