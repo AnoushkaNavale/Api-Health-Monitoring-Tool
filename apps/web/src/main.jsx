@@ -95,7 +95,7 @@ function AuthScreen({ onSession }) {
           <p className="eyebrow">API Monitor</p>
           <h1>Monitor APIs from one focused dashboard.</h1>
           <p className="muted">
-            Track uptime, latency, failures, alerts, and public status pages from the backend running on port 3000.
+            Track uptime, latency, failures, alerts, and public status pages from a focused operations view.
           </p>
         </div>
         <form className="auth-card" onSubmit={submit}>

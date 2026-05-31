@@ -58,6 +58,16 @@ The web dashboard runs at:
 http://localhost:3001
 ```
 
+## Screenshots
+
+### Login
+
+![Login screen](docs/screenshots/login.png)
+
+### Dashboard
+
+![Operations dashboard](docs/screenshots/dashboard.png)
+
 ## Useful Docker Commands
 
 ```powershell
